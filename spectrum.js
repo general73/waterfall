@@ -364,3 +364,5 @@ function Spectrum(id, options) {
     this.updateSpectrumRatio();
     this.resize();
 }
+
+module.exports = Spectrum;
