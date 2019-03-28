@@ -5,6 +5,7 @@
  */
 
 'use strict';
+var colormaps = require('./colormap.js');
 
 Spectrum.prototype.squeeze = function(value, out_min, out_max) {
     if (value <= this.min_db)
@@ -342,6 +343,9 @@ function Spectrum(id, options) {
 
     // Create main canvas and adjust dimensions to match actual
     this.canvas = document.getElementById(id);
+    if(this.canvas === null) {
+        throw "There is no <canvas> declared with id #" + id
+    }
     this.canvas.height = this.canvas.clientHeight;
     this.canvas.width = this.canvas.clientWidth;
     this.ctx = this.canvas.getContext("2d");
