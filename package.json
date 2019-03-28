@@ -4,9 +4,7 @@
   "description": "This is a small experiment to create a waterfall plot with HTML Canvas and WebSockets to stream live FFT data from an SDR",
   "main": "spectrum.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1",
-    "start": "webpack --watch",
-    "build": "webpack"
+    "test": "echo \"Error: no test specified\" && exit 1"
   },
   "repository": {
     "type": "git",
