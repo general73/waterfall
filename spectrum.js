@@ -129,26 +129,27 @@ Spectrum.prototype.updateAxes = function() {
     }
 
     this.ctx_axes.textBaseline = "bottom";
-    for (var i = 0; i < 11; i++) {
-        var x = Math.round(width / 10) * i;
+    for (var i = 0; i < this.ticksHz; i++) {
+        var x = Math.round(width / (this.ticksHz - 1)) * i;
 
         if (this.spanHz > 0) {
             var adjust = 0;
-            if (i == 0) {
+            if (i === 0) {
                 this.ctx_axes.textAlign = "left";
                 adjust = 3;
-            } else if (i == 10) {
+            } else if (i === (this.ticksHz - 1)) {
                 this.ctx_axes.textAlign = "right";
                 adjust = -3;
             } else {
                 this.ctx_axes.textAlign = "center";
             }
 
-            var freq = this.centerHz + this.spanHz / 10 * (i - 5);
+            var freqFactor = (2 / (this.ticksHz - 1)) * i - 1;  // range <-1; +1>
+            var freq = this.centerHz + this.spanHz * freqFactor;
             if (this.centerHz + this.spanHz > 1e6)
-                freq = freq / 1e6 + "M";
+                freq = (freq / 1e6).toFixed(2) + "M";
             else if (this.centerHz + this.spanHz > 1e3)
-                freq = freq / 1e3 + "k";
+                freq = (freq / 1e3).toFixed(2) + "k";
             this.ctx_axes.fillText(freq, x + adjust, height - 3);
         }
 
@@ -329,6 +330,7 @@ function Spectrum(id, options) {
     this.spectrumPercent = (options && options.spectrumPercent) ? options.spectrumPercent : 25;
     this.spectrumPercentStep = (options && options.spectrumPercentStep) ? options.spectrumPercentStep : 5;
     this.averaging = (options && options.averaging) ? options.averaging : 0.5;
+    this.ticksHz = (options && options.ticksHz) ? options.ticksHz : 10;
 
     // Setup state
     this.paused = false;
