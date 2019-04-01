@@ -150,7 +150,15 @@ Spectrum.prototype.updateAxes = function() {
                 freq = (freq / 1e6).toFixed(2) + "M";
             else if (this.centerHz + this.spanHz > 1e3)
                 freq = (freq / 1e3).toFixed(2) + "k";
-            this.ctx_axes.fillText(freq, x + adjust, height - 3);
+
+            if(this.horizontalAxisPosition === 'both') {
+                this.ctx_axes.fillText(freq, x + adjust, height);
+                this.ctx_axes.fillText(freq, x + adjust, 12);
+            } else if(this.horizontalAxisPosition === 'bottom') {
+                this.ctx_axes.fillText(freq, x + adjust, height);
+            } else if(this.horizontalAxisPosition === 'top') {
+                this.ctx_axes.fillText(freq, x + adjust, 12);
+            }
         }
 
         this.ctx_axes.beginPath();
@@ -331,6 +339,7 @@ function Spectrum(id, options) {
     this.spectrumPercentStep = (options && options.spectrumPercentStep) ? options.spectrumPercentStep : 5;
     this.averaging = (options && options.averaging) ? options.averaging : 0.5;
     this.ticksHz = (options && options.ticksHz) ? options.ticksHz : 10;
+    this.horizontalAxisPosition = (options && options.horizontalAxisPosition) ? options.horizontalAxisPosition : 'bottom';  // either 'top', 'bottom' or 'both'
 
     // Setup state
     this.paused = false;
