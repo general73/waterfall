@@ -5,6 +5,7 @@
  */
 
 'use strict';
+var colormaps = require('./colormap.js');
 
 Spectrum.prototype.squeeze = function(value, out_min, out_max) {
     if (value <= this.min_db)
@@ -156,27 +157,36 @@ Spectrum.prototype.updateAxes = function() {
     }
 
     this.ctx_axes.textBaseline = "bottom";
-    for (var i = 0; i < 11; i++) {
-        var x = Math.round(width / 10) * i;
+    for (var i = 0; i < this.ticksHz; i++) {
+        var x = Math.round(width / (this.ticksHz - 1)) * i;
 
         if (this.spanHz > 0) {
             var adjust = 0;
-            if (i == 0) {
+            if (i === 0) {
                 this.ctx_axes.textAlign = "left";
                 adjust = 3;
-            } else if (i == 10) {
+            } else if (i === (this.ticksHz - 1)) {
                 this.ctx_axes.textAlign = "right";
                 adjust = -3;
             } else {
                 this.ctx_axes.textAlign = "center";
             }
 
-            var freq = this.centerHz + this.spanHz / 10 * (i - 5);
+            var freqFactor = (2 / (this.ticksHz - 1)) * i - 1;  // range <-1; +1>
+            var freq = this.centerHz + this.spanHz * freqFactor;
             if (this.centerHz + this.spanHz > 1e6)
-                freq = freq / 1e6 + "M";
+                freq = (freq / 1e6).toFixed(2) + "M";
             else if (this.centerHz + this.spanHz > 1e3)
-                freq = freq / 1e3 + "k";
-            this.ctx_axes.fillText(freq, x + adjust, height - 3);
+                freq = (freq / 1e3).toFixed(2) + "k";
+
+            if(this.horizontalAxisPosition === 'both') {
+                this.ctx_axes.fillText(freq, x + adjust, height);
+                this.ctx_axes.fillText(freq, x + adjust, 12);
+            } else if(this.horizontalAxisPosition === 'bottom') {
+                this.ctx_axes.fillText(freq, x + adjust, height);
+            } else if(this.horizontalAxisPosition === 'top') {
+                this.ctx_axes.fillText(freq, x + adjust, 12);
+            }
         }
 
         this.ctx_axes.beginPath();
@@ -389,8 +399,9 @@ function Spectrum(id, options) {
     this.wf_rows = (options && options.wf_rows) ? options.wf_rows : 2048;
     this.spectrumPercent = (options && options.spectrumPercent) ? options.spectrumPercent : 25;
     this.spectrumPercentStep = (options && options.spectrumPercentStep) ? options.spectrumPercentStep : 5;
-    this.averaging = (options && options.averaging) ? options.averaging : 0;
-    this.maxHold = (options && options.maxHold) ? options.maxHold : false;
+    this.averaging = (options && options.averaging) ? options.averaging : 0.5;
+    this.ticksHz = (options && options.ticksHz) ? options.ticksHz : 10;
+    this.horizontalAxisPosition = (options && options.horizontalAxisPosition) ? options.horizontalAxisPosition : 'bottom';  // either 'top', 'bottom' or 'both'
 
     // Setup state
     this.paused = false;
@@ -405,6 +416,9 @@ function Spectrum(id, options) {
 
     // Create main canvas and adjust dimensions to match actual
     this.canvas = document.getElementById(id);
+    if(this.canvas === null) {
+        throw "There is no <canvas> declared with id #" + id
+    }
     this.canvas.height = this.canvas.clientHeight;
     this.canvas.width = this.canvas.clientWidth;
     this.ctx = this.canvas.getContext("2d");
@@ -428,3 +442,5 @@ function Spectrum(id, options) {
     this.updateSpectrumRatio();
     this.resize();
 }
+
+module.exports = Spectrum;
