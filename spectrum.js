@@ -16,7 +16,7 @@ Spectrum.prototype.squeeze = function(value, out_min, out_max) {
         return Math.round((value - this.min_db) / (this.max_db - this.min_db) * out_max);
 }
 
-Spectrum.prototype.rowToImageData = function (bins) {
+Spectrum.prototype.rowToImageData1 = function (bins) {
     for (var i = 0; i < this.imagedata.data.length; i += 4) {
         var cindex = this.squeeze(bins[i / 4], 0, 255);
         var color = this.colormap[cindex];
@@ -26,6 +26,18 @@ Spectrum.prototype.rowToImageData = function (bins) {
         this.imagedata.data[i + 3] = 255;
     }
 }
+
+Spectrum.prototype.rowToImageData2 = function (bins) {
+    for (var i = 0; i < this.imagedata.data.length; i += 4) {
+        var ii = parseInt(i / 12) * 3;
+        this.imagedata.data[i + 0] = this.squeeze(bins[ii + 0], 0, 255);
+        this.imagedata.data[i + 1] = this.squeeze(bins[ii + 1], 0, 255);
+        this.imagedata.data[i + 2] = this.squeeze(bins[ii + 2], 0, 255);
+        this.imagedata.data[i + 3] = 255;
+    }
+}
+
+Spectrum.prototype.rowToImageData = Spectrum.prototype.rowToImageData2;
 
 Spectrum.prototype.addWaterfallRow = function (bins) {
     // Shift waterfall 1 row down
@@ -362,27 +374,39 @@ Spectrum.prototype.toggleColor = function () {
     this.updateSpectrumRatio();
 }
 
-Spectrum.prototype.setRange = function (min_db, max_db) {
+Spectrum.prototype.toggleColorType = function () {
+    this.wt_useColorMap = !this.wt_useColorMap;
+    if (this.wt_useColorMap)
+        this.rowToImageData = this.rowToImageData2;
+    else
+        this.rowToImageData = this.rowToImageData1;
+}
+
+Spectrum.prototype.setRange = function (min_db, max_db, temporary) {
     this.min_db = min_db;
     this.max_db = max_db;
+    if (!temporary) {
+        this.max_db_original = this.max_db;
+        this.min_db_original = this.min_db;
+    }
     this.updateAxes();
 }
 
 Spectrum.prototype.rangeUp = function () {
-    this.setRange(this.min_db - 5, this.max_db - 5);
+    this.setRange(this.min_db - 5, this.max_db - 5, true);
 }
 
 Spectrum.prototype.rangeDown = function () {
-    this.setRange(this.min_db + 5, this.max_db + 5);
+    this.setRange(this.min_db + 5, this.max_db + 5, true);
 }
 
 Spectrum.prototype.rangeIncrease = function () {
-    this.setRange(this.min_db - 5, this.max_db + 5);
+    this.setRange(this.min_db - 5, this.max_db + 5, true);
 }
 
 Spectrum.prototype.rangeDecrease = function () {
     if (this.max_db - this.min_db > 10)
-        this.setRange(this.min_db + 5, this.max_db - 5);
+        this.setRange(this.min_db + 5, this.max_db - 5, true);
 }
 
 Spectrum.prototype.setCenterHz = function (hz, zoomHz) {
@@ -464,6 +488,8 @@ Spectrum.prototype.onKeypress = function (e) {
         this.toggleFullscreen();
     } else if (e.key == "c") {
         this.toggleColor();
+    } else if (e.key == "v") {
+        this.toggleColorType();
     } else if (e.key == "ArrowUp") {
         this.rangeUp();
     } else if (e.key == "ArrowDown") {
@@ -482,6 +508,8 @@ Spectrum.prototype.onKeypress = function (e) {
         this.rangeDecrease();
     } else if (e.key == "2") {
         this.rangeIncrease();
+    } else if (e.key == "0") {
+        this.setRange(this.min_db_original, this.max_db_original);
     } else if (e.key == "s") {
         this.incrementSpectrumPercent();
     } else if (e.key == "w") {
@@ -515,12 +543,15 @@ function Spectrum(id, options) {
     //this.min_db = -120;
     //this.max_db = -20;
     this.min_db = 0;
-    this.max_db = 100;
+    this.max_db = 255;
+    this.max_db_original = this.max_db;
+    this.min_db_original = this.min_db;
     this.spectrumHeight = 0;
 
     // Colors
     this.colorindex = 0;
     this.colormap = colormaps[0];
+    this.wt_useColorMap = false;
 
     // Create main canvas and adjust dimensions to match actual
     this.canvas = document.getElementById(id);

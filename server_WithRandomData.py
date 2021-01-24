@@ -16,6 +16,9 @@ from threading import Thread , Event
 
 import numpy as np
 
+#pip install opencv-python
+import cv2
+
 from gevent.pywsgi import WSGIServer
 from geventwebsocket import WebSocketError
 from geventwebsocket.handler import WebSocketHandler
@@ -123,27 +126,34 @@ class MyThread(Thread):
         self.stopped = event
 
     def run(self):
-        p = generateRandomList(1000,0,100)
-        p2 = [-1,1]
-        p2_index = 0
-
-        while not self.stopped.wait(0.1):
+        #p = generateRandomList(1000,0,100)
+        #p2 = [-1,1]
+        #p2_index = 0
+        
+        img = cv2.imread("./test1.jpg")   # reads an image in the BGR format
+        img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)   # BGR -> RGB
+        #img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+        imgRowCount = len(img)
+        imgRow = imgRowCount - 1
+        
+        while not self.stopped.wait(0.02):
             #print("my thread")
             for c in connections.copy():
                 try:
-                    #tmp = p[79]
-                    #p[79] = p[0]
-                    #p[0] = p[1]
-                    p2_index = (p2_index + 1) % 2
-                    #for i in range(1,78):
-                    #    p[i] = p[i] + p2[p2_index]
-                    p = np.roll(p,p2[p2_index]).tolist()
+                    #p2_index = (p2_index + 1) % 2
+                    #p = np.roll(p,p2[p2_index]).tolist()
+                    
+                    p = img[imgRow].flatten().tolist()
+                    
+                    imgRow = imgRow - 1
+                    if imgRow < 0 :
+                        imgRow = imgRowCount - 1
+
                     c.send(json.dumps({'s': p}, separators=(',', ':')))
-                    #c.send(json.dumps({'s': [1,2,3,4,5,6,7,8,9,10,9,8,7,6,5,4,3,2,1,0,1,2,3,10,10,10,10,2,3,4,4,5,4,3,2,1,1,1,1,1]}, separators=(',', ':')))
-                    #c.send(json.dumps({'s': p.tolist()}, separators=(',', ':')))
                 except Exception:
                     print('error in MyThread')
                     connections.remove(c)
+                    raise
             # call a function
 
 

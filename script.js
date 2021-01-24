@@ -28,14 +28,14 @@ function connectWebSocket(spectrum) {
         }
     }
 }
-
+var g_spectrum;
 function main() {
     // Create spectrum object on canvas with ID "waterfall"
     var spectrum = new Spectrum(
         "waterfall", {
             spectrumPercent: 20
     });
-
+    g_spectrum = spectrum;
     // Connect to websocket
     connectWebSocket(spectrum);
 
